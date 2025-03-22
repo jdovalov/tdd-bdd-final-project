@@ -30,6 +30,7 @@ from decimal import Decimal
 from service.models import Product, Category, db
 from service import app
 from tests.factories import ProductFactory
+from service.models import DataValidationError
 
 DATABASE_URI = os.getenv(
     "DATABASE_URI", "postgresql://postgres:postgres@localhost:5432/postgres"
@@ -104,3 +105,156 @@ class TestProductModel(unittest.TestCase):
     #
     # ADD YOUR TEST CASES HERE
     #
+    def test_read_a_product(self):
+        """It should read an existing product"""
+        # create product and add it to database
+        product = ProductFactory()
+        product.id = None
+        product.create()
+        self.assertIsNotNone(product.id)
+        # read it back
+        found_product = Product.find(product.id)
+        self.assertEqual(found_product.id, product.id)
+        self.assertEqual(found_product.name, product.name)
+        self.assertEqual(found_product.description, product.description)
+        self.assertEqual(found_product.price, product.price)
+
+    def test_update_a_product(self):
+        """It should update an existing product"""
+        # create product and add it to database
+        product = ProductFactory()
+        product.id = None
+        product.create()
+        self.assertIsNotNone(product.id)
+        original_id = product.id
+        # modify product and update database
+        product.name = "balloon"
+        product.description = "testing"
+        product.price = 0.99
+        product.update()
+        self.assertEqual(product.id,original_id)
+        self.assertEqual(product.name,"balloon")
+        self.assertEqual(product.description,"testing")
+        self.assertEqual(product.price,Decimal('0.99'))
+        # read it back
+        products = Product.all()
+        self.assertEqual(len(products),1)
+        found_product = products[0]
+        self.assertEqual(found_product.id, product.id)
+        self.assertEqual(found_product.name, product.name)
+        self.assertEqual(found_product.description, product.description)
+        self.assertEqual(found_product.price, product.price)
+
+    def test_delete_a_product(self):
+        """It should delete an existing product"""
+        # create a two products
+        product1 = ProductFactory()
+        product1.create()
+        product2 = ProductFactory()
+        product2.create()
+        self.assertEqual(len(Product.all()),2)
+        # delete the first product, make sure the second is still present
+        product1.delete()
+        self.assertEqual(len(Product.all()),1)
+        products = Product.all()
+        self.assertEqual(len(products),1)
+        self.assertEqual(products[0].id, product2.id)
+        # delete the second product, make sure no products remain
+        product2.delete()
+        self.assertEqual(len(Product.all()),0)
+    
+    def test_list_all_products(self):
+        """It should list all products"""
+        self.assertEqual(len(Product.all()),0)
+        # create 5 products
+        for _ in range(5):
+            product = ProductFactory()
+            product.create()
+        # make sure we get 5 products
+        self.assertEqual(len(Product.all()),5)
+
+    def test_find_by_name(self):
+        """It should find a product by name"""
+        products = ProductFactory.create_batch(5)
+        for product in products:
+            product.create()
+        name = products[0].name
+        expected_count = len([product for product in products if product.name==name])
+        found = Product.find_by_name(name)
+        self.assertEqual(found.count(), expected_count)
+        for product in found:
+            self.assertEqual(product.name, name)
+
+    def test_find_by_availability(self):
+        """It should find products by availability"""
+        products = ProductFactory.create_batch(10)
+        for product in products:
+            product.create()
+        available = products[0].available
+        expected_count = len([product for product in products if product.available==available])
+        found = Product.find_by_availability(available)
+        self.assertEqual(found.count(), expected_count)
+        for product in found:
+            self.assertEqual(product.available, available)
+
+    def test_find_by_category(self):
+        """It should find products by category"""
+        products = ProductFactory.create_batch(10)
+        for product in products:
+            product.create()
+        category = products[0].category
+        expected_count = len([product for product in products if product.category==category])
+        found = Product.find_by_category(category)
+        self.assertEqual(found.count(), expected_count)
+        for product in found:
+            self.assertEqual(product.category, category)
+
+    def test_find_by_price_decimal(self):
+        """It should find products by price provided as a decimal"""
+        products = ProductFactory.create_batch(10)
+        for product in products:
+            product.create()
+        price = products[0].price
+        expected_count = len([product for product in products if product.price==price])
+        found = Product.find_by_price(price)
+        self.assertEqual(found.count(), expected_count)
+        for product in found:
+            self.assertEqual(product.price, price)
+
+    def test_find_by_price_string(self):
+        """It should find products by price provided as a string"""
+        products = ProductFactory.create_batch(10)
+        for product in products:
+            product.create()
+        price = products[0].price
+        price_string = str(price)
+        assert type(price_string) is str
+        expected_count = len([product for product in products if product.price==price])
+        found = Product.find_by_price(price_string)
+        self.assertEqual(found.count(), expected_count)
+        for product in found:
+            self.assertEqual(product.price, price)
+
+#    def test_read_a_nonexistent_product(self):
+#        """It should return an error when attempting to read a product that doesn't exist"""
+#        raise NotImplementedError("Test has not yet been written")
+    
+#    def test_update_a_nonexistent_product(self):
+#        """It should return an error when attempting to update a product that doesn't exist"""
+#        raise NotImplementedError("Test has not yet been written")
+
+    def test_update_a_product_without_id(self):
+        """It should return an error when attempting to update a product without an ID"""
+        # create product and add it to database
+        product = ProductFactory()
+        product.id = None
+        product.create()
+        self.assertIsNotNone(product.id)
+        # modify product and update database
+        product.id = None
+        product.name = "balloon"
+        self.assertRaises(DataValidationError,product.update)
+
+#    def test_delete_a_nonexistent_product(self):
+#        """It should return an error when attempting to delete a product that doesn't exist"""
+#        raise NotImplementedError("Test has not yet been written")
