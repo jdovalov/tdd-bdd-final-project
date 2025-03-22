@@ -213,12 +213,12 @@ class TestProductRoutes(TestCase):
         # assign the first product from the products list to the variable test_product
         test_product = products[0]
         # attempt to delete and check response
-        response = self.client.delete(f"{BASE_URL}/{test_product['id']}")
-        self.assertEqual(response.status_code, status.HTTP_204_CREATED)
+        response = self.client.delete(f"{BASE_URL}/{test_product.id}")
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
         self.assertEqual(len(response.data), 0)
 
         # make sure the product was really deleted
-        response = self.client.get(f"{BASE_URL}/{test_product['id']}")
+        response = self.client.get(f"{BASE_URL}/{test_product.id}")
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
         expected_count = initial_count - 1
         final_count = self.get_product_count()
