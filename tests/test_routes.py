@@ -270,7 +270,7 @@ class TestProductRoutes(TestCase):
         expected_count = len([product for product in products if product.available is True])
 
         # request the data
-        response = self.client.get(BASE_URL, query_string=f"available=true")
+        response = self.client.get(BASE_URL, query_string="available=true")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         data = response.get_json()
         self.assertEqual(len(data), expected_count)

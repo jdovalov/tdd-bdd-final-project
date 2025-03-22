@@ -106,6 +106,7 @@ def list_products():
     products = []
     name = request.args.get("name")
     category = request.args.get("category")
+    available = request.args.get("available")
 
     if name:
         app.logger.info("... where name is %s", name)
@@ -115,6 +116,11 @@ def list_products():
         # create enum from string
         category_value = getattr(Category, category.upper())
         products = Product.find_by_category(category_value)
+    elif available:
+        app.logger.info("... where available is %s", available)
+        # create enum from string
+        available_value = available.lower() in ["true", "t", "yes", "y", "1"]
+        products = Product.find_by_availability(available_value)
     else:
         products = Product.all()
 
