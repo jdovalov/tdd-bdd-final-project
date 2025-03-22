@@ -123,13 +123,32 @@ def get_products(product_id):
     # return the serialize() version of the product with a return code of status.HTTP_200_OK
     return product.serialize(), status.HTTP_200_OK
 
+
 ######################################################################
 # U P D A T E   A   P R O D U C T
 ######################################################################
+@app.route("/products/<int:product_id>", methods=["PUT"])
+def update_products(product_id):
+    """
+    Update a single Product
 
-#
-# PLACE YOUR CODE TO UPDATE A PRODUCT HERE
-#
+    This endpoint will update a Product based on it's id
+    """
+    app.logger.info("Request to update a product with id [%s]", product_id)
+
+    # find the product
+    product = Product.find(product_id)
+    # abort() with a status.HTTP_404_NOT_FOUND if it cannot be found
+    if product is None:
+        abort(status.HTTP_404_NOT_FOUND, f"Could not find product with id {product_id}.")
+
+    # update the product
+    product.deserialize(request.get_json())
+    product.id = product_id
+    product.update()
+
+    # return the serialize() version of the product with a return code of status.HTTP_200_OK
+    return product.serialize(), status.HTTP_200_OK
 
 ######################################################################
 # D E L E T E   A   P R O D U C T
