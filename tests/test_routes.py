@@ -28,6 +28,7 @@ import os
 import logging
 from decimal import Decimal
 from unittest import TestCase
+from urllib.parse import quote_plus
 from service import app
 from service.common import status
 from service.models import db, init_db, Product
@@ -234,6 +235,20 @@ class TestProductRoutes(TestCase):
         self.assertEqual(self.get_product_count(), 0)
         self._create_products(5)
         self.assertEqual(self.get_product_count(), 5)
+
+    def test_query_by_name(self):
+        """It should Query Products by name"""
+        products = self._create_products(10)
+        name = products[0].name
+        expected_count = len([product for product in products if product.name == name])
+
+        # request the data
+        response = self.client.get(BASE_URL, query_string=f"name={quote_plus(name)}")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.get_json()
+        self.assertEqual(len(data), expected_count)
+        for product in data:
+            self.assertEqual(product.name, name)
 
     ######################################################################
     # Utility functions
