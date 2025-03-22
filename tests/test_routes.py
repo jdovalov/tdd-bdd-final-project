@@ -248,7 +248,7 @@ class TestProductRoutes(TestCase):
         data = response.get_json()
         self.assertEqual(len(data), expected_count)
         for product in data:
-            self.assertEqual(product.name, name)
+            self.assertEqual(product["name"], name)
 
     ######################################################################
     # Utility functions
