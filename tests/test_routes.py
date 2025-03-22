@@ -180,7 +180,29 @@ class TestProductRoutes(TestCase):
         """It should not Get a single Product that isn't found"""
         # make a self.client.get request to the API endpoint and store the result in the variable named response
         response = self.client.get(f"{BASE_URL}/0")
-        # assert that the resp.status_code is status.HTTP_200_OK
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_update_product(self):
+         """It should Update an existing Product"""
+        # create a product to update
+        test_product = ProductFactory()
+        # send a self.client.post() request to the BASE_URL with a json payload of test_product.serialize()
+        response = self.client.post(f"{BASE_URL}",json=test_product.serialize())
+        # assert that the resp.status_code is status.HTTP_201_CREATED
+        self.assertEqual(response.status_code, HTTP_201_CREATED)
+        # UPDATE THE PRODUCT
+        new_product = response.get_json()
+        new_product["description"] = "unknown"
+        response = self.client.put(f"{BASE_URL}/{new_product['id']}", json=new_product)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        updated_product = response.get_json()
+        self.assertEqual(updated_product["description"], "unknown")
+
+    def test_get_nonexistent_product(self):
+        """It should not Get a single Product that isn't found"""
+        test_product = ProductFactory()
+        product.id = 0;
+        response = self.client.get(f"{BASE_URL}/{product.id}", json=product.serialize())
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
     ######################################################################
